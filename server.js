@@ -7,10 +7,27 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 中间件
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true })); // 支持表单数据
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
+
+// 简单的cookie解析器函数
+function parseCookies(cookieString) {
+  const cookies = {};
+  if (cookieString) {
+    cookieString.split(';').forEach(cookie => {
+      const [name, value] = cookie.trim().split('=');
+      if (name && value) {
+        cookies[name] = decodeURIComponent(value);
+      }
+    });
+  }
+  return cookies;
+}
 
 // 存储设备数据
 let deviceData = {
@@ -340,11 +357,7 @@ app.post('/login', (req, res) => {
     console.log(`✅ User ${username} logged in successfully with role ${user.role}`);
     
     // 设置cookie并重定向到主页
-    res.cookie('sessionToken', sessionToken, { 
-      httpOnly: false, 
-      maxAge: 24 * 60 * 60 * 1000, // 24小时
-      path: '/'
-    });
+    res.setHeader('Set-Cookie', `sessionToken=${sessionToken}; Path=/; Max-Age=${24 * 60 * 60}; HttpOnly=false`);
     res.redirect('/dashboard');
   } else {
     console.log(`❌ Failed login attempt for: ${username}`);
@@ -383,19 +396,22 @@ app.post('/api/login', (req, res) => {
 
 // 用户登出
 app.post('/logout', (req, res) => {
-  const sessionToken = req.cookies?.sessionToken;
+  const cookies = parseCookies(req.headers.cookie);
+  const sessionToken = cookies.sessionToken;
+  
   if (sessionToken && sessions[sessionToken]) {
     console.log(`👤 User ${sessions[sessionToken].username} logged out`);
     delete sessions[sessionToken];
   }
   
-  res.clearCookie('sessionToken');
+  res.setHeader('Set-Cookie', 'sessionToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT');
   res.redirect('/');
 });
 
 // 检查认证状态
 function checkAuth(req, res, next) {
-  const sessionToken = req.cookies?.sessionToken;
+  const cookies = parseCookies(req.headers.cookie);
+  const sessionToken = cookies.sessionToken;
   
   if (!sessionToken || !sessions[sessionToken]) {
     return res.send(getLoginPageHTML());
@@ -478,7 +494,8 @@ app.get('/dashboard', checkAuth, (req, res) => {
 
 // 状态API - 需要认证
 app.get('/api/status', (req, res) => {
-  const sessionToken = req.cookies?.sessionToken;
+  const cookies = parseCookies(req.headers.cookie);
+  const sessionToken = cookies.sessionToken;
   
   if (!sessionToken || !sessions[sessionToken]) {
     return res.status(401).json({ error: 'Unauthorized' });
