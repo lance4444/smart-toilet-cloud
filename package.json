@@ -1,33 +1,13 @@
 {
   "name": "smart-toilet-cloud",
   "version": "1.0.0",
-  "description": "Smart toilet monitoring system - Cloud version with authentication",
-  "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
-    "body-parser": "^1.20.2"
-  },
-  "engines": {
-    "node": ">=16.0.0"
-  },
-  "keywords": [
-    "iot",
-    "smart-toilet", 
-    "monitoring",
-    "esp32",
-    "cloud",
-    "realtime"
-  ],
-  "author": "EEE4464 EA Project",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "your-github-repo-url"
+    "body-parser": "^1.20.2",
+    "ws": "^8.14.2"
   }
 }
