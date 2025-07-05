@@ -387,6 +387,9 @@
                 <button class="btn" onclick="toggleAutoRefresh()">
                     <span class="btn-icon" id="autoRefreshIcon">⏸️</span> <span id="autoRefreshText">Pause Auto</span>
                 </button>
+                <button class="btn" onclick="logout()" style="background: #f44336;">
+                    <span class="btn-icon">🚪</span> Logout
+                </button>
             </div>
             
             <div id="occupiedStatus" class="occupied-indicator occupied-available">
@@ -445,6 +448,7 @@
         let autoRefreshEnabled = true;
         let autoRefreshInterval;
         let connectionCheckInterval;
+        let isAuthenticated = false;
         
         // API基础URL - 根据当前域名自动判断
         const API_BASE = window.location.origin;
@@ -452,8 +456,27 @@
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚽 Smart Toilet Cloud Interface Loading...');
-            initializeApp();
+            checkAuthentication();
         });
+        
+        function checkAuthentication() {
+            // 检查是否有session cookie
+            const sessionToken = getCookie('sessionToken');
+            if (sessionToken) {
+                isAuthenticated = true;
+                initializeApp();
+            } else {
+                // 重定向到登录页面
+                window.location.href = '/';
+            }
+        }
+        
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
         
         function initializeApp() {
             updateStatus();
@@ -528,13 +551,21 @@
             try {
                 updateConnectionStatus('loading');
                 
+                // 使用新的API端点，包含认证
                 const response = await fetch(`${API_BASE}/api/devices`, {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',
                         'Cache-Control': 'no-cache'
-                    }
+                    },
+                    credentials: 'include' // 包含cookies
                 });
+                
+                if (response.status === 401) {
+                    // 未认证，重定向到登录页面
+                    window.location.href = '/';
+                    return;
+                }
                 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -562,7 +593,10 @@
         }
         
         function updateDeviceDisplay(data) {
-            // 更新占用状态
+            console.log('🔄 Updating display with data:', data);
+            console.log(`🚪 Door: ${data.doorOpen ? 'Open' : 'Closed'}, 👤 Person: ${data.personDetected}, 👥 Count: ${data.peopleCount}, 🚻 Occupied: ${data.occupied}`);
+            
+            // 更新占用状态 - 确保逻辑正确：门关闭 + 检测到人 = 占用
             const occupiedDiv = document.getElementById('occupiedStatus');
             
             if (data.occupancyTimeout) {
@@ -585,12 +619,13 @@
             updateCard('trashCard', 'trashStatus', data.trashFull, '⚠️ Bin Full!', '✅ Normal');
             updateCard('weightCard', 'weightStatus', data.weightAlert, '⚠️ Alert!', '✅ Normal');
             
-            // 人数统计
+            // 人数统计 - 确保显示正确的数字
             const peopleCard = document.getElementById('peopleCard');
             peopleCard.className = 'status-card card-info';
-            document.getElementById('peopleCount').textContent = (data.peopleCount || 0) + ' Person(s)';
+            const peopleCountDisplay = Math.max(0, parseInt(data.peopleCount) || 0);
+            document.getElementById('peopleCount').textContent = peopleCountDisplay + ' Person(s)';
             
-            // 门状态
+            // 门状态 - 显示逻辑：门开启=绿色正常，门关闭=红色警告（因为关门可能表示使用中）
             const doorCard = document.getElementById('doorCard');
             const doorStatus = document.getElementById('doorStatus');
             if (data.doorOpen) {
@@ -606,8 +641,8 @@
             const airStatus = document.getElementById('airStatus');
             const airDetails = document.getElementById('airDetails');
             
-            const co2Level = data.co2Level || 0;
-            const tvocLevel = data.tvocLevel || 0;
+            const co2Level = parseInt(data.co2Level) || 0;
+            const tvocLevel = parseInt(data.tvocLevel) || 0;
             
             if (co2Level > 2000 || tvocLevel > 5000) {
                 airCard.className = 'status-card card-danger';
@@ -622,7 +657,7 @@
             
             airDetails.textContent = `CO₂: ${co2Level}ppm | TVOC: ${tvocLevel}ppb`;
             
-            // 更新时间戳
+            // 更新时间戳和设备信息
             document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
             document.getElementById('deviceInfo').textContent = `Device: ${data.deviceId || 'toilet_001'}`;
         }
@@ -664,8 +699,14 @@
         async function resetAlerts() {
             try {
                 const response = await fetch(`${API_BASE}/api/reset`, {
-                    method: 'POST'
+                    method: 'POST',
+                    credentials: 'include' // 包含cookies
                 });
+                
+                if (response.status === 401) {
+                    window.location.href = '/';
+                    return;
+                }
                 
                 if (response.ok) {
                     showNotification('✅ Alerts Reset!', 'success');
@@ -682,11 +723,17 @@
         async function generateTest() {
             try {
                 const response = await fetch(`${API_BASE}/api/test`, {
-                    method: 'POST'
+                    method: 'POST',
+                    credentials: 'include' // 包含cookies
                 });
                 
+                if (response.status === 401) {
+                    window.location.href = '/';
+                    return;
+                }
+                
                 if (response.ok) {
-                    showNotification('🧪 Test Data Generated!', 'success');
+                    showNotification('🧪 Test Data Generated! (Door CLOSED + Person DETECTED = OCCUPIED)', 'success');
                     setTimeout(updateStatus, 1000);
                 } else {
                     showNotification('❌ Test Generation Failed!', 'error');
@@ -694,6 +741,12 @@
             } catch (error) {
                 console.error('Test generation failed:', error);
                 showNotification('❌ Test Failed: ' + error.message, 'error');
+            }
+        }
+        
+        function logout() {
+            if (confirm('确定要登出吗？')) {
+                window.location.href = '/logout';
             }
         }
         
