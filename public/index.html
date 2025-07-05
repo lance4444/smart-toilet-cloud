@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
     <meta charset="UTF-8">
+    <title>EEE4464 EA Project - Smart Toilet Monitor (Cloud)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智能厕所监控系统 - 云端版</title>
     <style>
         * {
             margin: 0;
@@ -12,357 +12,251 @@
         }
         
         body {
-            font-family: 'Arial', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f0f8f0 0%, #e8f5e8 100%);
+            color: #2d5a2d;
             min-height: 100vh;
-            color: #333;
-        }
-        
-        .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        
-        .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .logo h1 {
-            font-size: 1.8em;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: bold;
-        }
-        
-        .status-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .status-online {
-            background: linear-gradient(135deg, #4facfe, #00f2fe);
-            color: white;
-            animation: pulse 2s infinite;
-        }
-        
-        .status-offline {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
-            color: white;
-        }
-        
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(79, 172, 254, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(79, 172, 254, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(79, 172, 254, 0); }
+            padding: 15px;
         }
         
         .container {
             max-width: 1200px;
-            margin: 30px auto;
-            padding: 0 20px;
-        }
-        
-        .devices-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .device-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .device-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-        }
-        
-        .device-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-        }
-        
-        .device-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-        
-        .device-title {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #2d3748;
-        }
-        
-        .device-id {
-            font-size: 0.85em;
-            color: #718096;
-            background: #f7fafc;
-            padding: 4px 8px;
-            border-radius: 8px;
-        }
-        
-        .occupancy-status {
-            text-align: center;
-            padding: 20px;
+            margin: 0 auto;
+            background: white;
             border-radius: 15px;
-            margin-bottom: 25px;
-            font-size: 1.1em;
-            font-weight: bold;
-            position: relative;
+            box-shadow: 0 4px 20px rgba(76, 175, 80, 0.15);
             overflow: hidden;
+            border: 3px solid #4CAF50;
         }
         
-        .occupancy-available {
-            background: linear-gradient(135deg, #48bb78, #38a169);
+        .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
             color: white;
-        }
-        
-        .occupancy-occupied {
-            background: linear-gradient(135deg, #f56565, #e53e3e);
-            color: white;
-            animation: alertPulse 1.5s infinite;
-        }
-        
-        .occupancy-timeout {
-            background: linear-gradient(135deg, #ed8936, #dd6b20);
-            color: white;
-            animation: urgentAlert 1s infinite;
-        }
-        
-        @keyframes alertPulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
-        }
-        
-        @keyframes urgentAlert {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-        }
-        
-        .sensors-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .sensor-card {
-            background: #f8fafc;
-            border: 2px solid #e2e8f0;
-            padding: 15px;
-            border-radius: 12px;
+            padding: 25px;
             text-align: center;
-            transition: all 0.3s ease;
+            position: relative;
         }
         
-        .sensor-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        .user-info {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 12px;
+            opacity: 0.9;
         }
         
-        .sensor-good {
-            border-color: #48bb78;
-            background: linear-gradient(135deg, #f0fff4, #c6f6d5);
+        .cloud-badge {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            text-decoration: none;
+            font-size: 11px;
+            margin-left: 10px;
         }
         
-        .sensor-warning {
-            border-color: #ed8936;
-            background: linear-gradient(135deg, #fffaf0, #fbd38d);
-        }
-        
-        .sensor-danger {
-            border-color: #f56565;
-            background: linear-gradient(135deg, #fff5f5, #feb2b2);
-        }
-        
-        .sensor-info {
-            border-color: #4299e1;
-            background: linear-gradient(135deg, #ebf8ff, #bee3f8);
-        }
-        
-        .sensor-icon {
-            font-size: 24px;
-            margin-bottom: 8px;
-            display: block;
-        }
-        
-        .sensor-label {
-            font-size: 0.8em;
-            color: #4a5568;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-        
-        .sensor-value {
-            font-size: 0.9em;
+        .project-title {
+            font-size: 16px;
             font-weight: bold;
-            color: #2d3748;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
         }
         
-        .device-footer {
+        h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 25px;
+        }
+        
+        .control-buttons {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid #e2e8f0;
-        }
-        
-        .last-update {
-            font-size: 0.8em;
-            color: #718096;
-        }
-        
-        .device-actions {
-            display: flex;
-            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 25px;
         }
         
         .btn {
-            padding: 8px 12px;
+            background: #4CAF50;
             border: none;
-            border-radius: 8px;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 20px;
             cursor: pointer;
-            font-size: 0.8em;
+            font-size: 14px;
             font-weight: 600;
             transition: all 0.3s ease;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
         }
         
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
+        .btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
         }
         
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
         }
         
-        .btn-secondary {
-            background: #e2e8f0;
-            color: #4a5568;
+        .btn-icon {
+            font-size: 18px;
         }
         
-        .btn-secondary:hover {
-            background: #cbd5e0;
-        }
-        
-        .no-devices {
+        .occupied-indicator {
+            font-size: 22px;
+            font-weight: bold;
             text-align: center;
-            padding: 60px 20px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
+            padding: 22px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 2px solid;
         }
         
-        .no-devices h2 {
-            color: #4a5568;
-            margin-bottom: 15px;
-            font-size: 1.5em;
+        .occupied-available {
+            background: linear-gradient(135deg, #e8f5e8, #f0f9f0);
+            border-color: #4CAF50;
+            color: #2d5a2d;
         }
         
-        .no-devices p {
-            color: #718096;
-            line-height: 1.6;
+        .occupied-busy {
+            background: linear-gradient(135deg, #ffebee, #fce4ec);
+            border-color: #f44336;
+            color: #c62828;
+            animation: pulse 2s infinite;
+        }
+        
+        .occupied-timeout {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            border-color: #ff9800;
+            color: #e65100;
+            animation: urgentPulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(244, 67, 54, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+        }
+        
+        @keyframes urgentPulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.8); }
+            50% { box-shadow: 0 0 0 10px rgba(255, 152, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
+        }
+        
+        .occupancy-message {
+            font-size: 16px;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+        
+        .status-card {
+            background: #f8fcf8;
+            border: 2px solid #4CAF50;
+            padding: 22px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .status-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.2);
+        }
+        
+        .status-card h3 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            color: #2d5a2d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .status-card p {
+            margin: 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .card-icon {
+            font-size: 28px;
+        }
+        
+        .card-good {
+            background: #f8fcf8;
+            border-color: #4CAF50;
+            color: #2d5a2d;
+        }
+        
+        .card-warning {
+            background: #fff8e1;
+            border-color: #FF9800;
+            color: #e65100;
+        }
+        
+        .card-danger {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+        
+        .card-info {
+            background: #e3f2fd;
+            border-color: #2196F3;
+            color: #1565c0;
+        }
+        
+        .last-update {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .status-value {
+            font-size: 14px;
+            margin-top: 8px;
         }
         
         .loading {
-            text-align: center;
-            padding: 40px;
-            font-size: 1.1em;
-            color: #4a5568;
+            color: #999;
+            font-style: italic;
         }
         
-        .loading::before {
-            content: '⏳';
-            display: block;
-            font-size: 2em;
-            margin-bottom: 10px;
-            animation: spin 2s linear infinite;
-        }
-        
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-            
-            .devices-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-            
-            .device-card {
-                padding: 20px;
-            }
-            
-            .sensors-grid {
-                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-                gap: 10px;
-            }
-            
-            .device-footer {
-                flex-direction: column;
-                gap: 10px;
-                align-items: flex-start;
-            }
-        }
-        
-        .connection-indicator {
+        .connection-status {
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 10px 15px;
+            padding: 8px 15px;
             border-radius: 20px;
             font-size: 0.8em;
             font-weight: 600;
@@ -370,308 +264,503 @@
             transition: all 0.3s ease;
         }
         
-        .connected {
-            background: #48bb78;
+        .status-connected {
+            background: #4CAF50;
             color: white;
         }
         
-        .connecting {
-            background: #ed8936;
+        .status-disconnected {
+            background: #f44336;
+            color: white;
+        }
+        
+        .status-loading {
+            background: #ff9800;
             color: white;
             animation: pulse 1s infinite;
         }
         
-        .disconnected {
-            background: #f56565;
-            color: white;
+        @media (max-width: 768px) {
+            .container {
+                margin: 5px;
+                border-radius: 10px;
+            }
+            
+            h1 {
+                font-size: 1.5em;
+            }
+            
+            .subtitle {
+                font-size: 14px;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+            
+            .status-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .control-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 250px;
+                justify-content: center;
+            }
+            
+            .occupied-indicator {
+                font-size: 16px;
+                padding: 15px;
+            }
+            
+            .status-card {
+                padding: 15px;
+            }
+            
+            .card-icon {
+                font-size: 20px;
+            }
+            
+            .status-card h3 {
+                font-size: 14px;
+            }
+            
+            .status-card p {
+                font-size: 13px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+            
+            .project-title {
+                font-size: 12px;
+            }
+            
+            h1 {
+                font-size: 1.3em;
+            }
+            
+            .subtitle {
+                font-size: 12px;
+            }
+            
+            .user-info {
+                position: static;
+                text-align: center;
+                margin-top: 10px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-content">
-            <div class="logo">
-                <span style="font-size: 2em;">🚽</span>
-                <div>
-                    <h1>智能厕所监控系统</h1>
-                    <div style="font-size: 0.8em; color: #718096;">EEE4464 EA Project - 云端版</div>
+    <div class="container">
+        <div class="header">
+            <div class="user-info">
+                <span id="deviceInfo">Device: toilet_001</span>
+                <span class="cloud-badge">☁️ Cloud Version</span>
+            </div>
+            <div class="project-title">EEE4464 EA PROJECT</div>
+            <h1><span style="font-size: 1.2em;">🚽</span> Smart Toilet Monitoring System</h1>
+            <div class="subtitle">Real-time Facility Management Dashboard</div>
+        </div>
+        
+        <div class="content">
+            <div class="control-buttons">
+                <button class="btn" onclick="resetAlerts()">
+                    <span class="btn-icon">🔄</span> Reset Alerts
+                </button>
+                <button class="btn" onclick="generateTest()">
+                    <span class="btn-icon">🧪</span> Test Data
+                </button>
+                <button class="btn" onclick="location.reload()">
+                    <span class="btn-icon">♻️</span> Refresh
+                </button>
+                <button class="btn" onclick="toggleAutoRefresh()">
+                    <span class="btn-icon" id="autoRefreshIcon">⏸️</span> <span id="autoRefreshText">Pause Auto</span>
+                </button>
+            </div>
+            
+            <div id="occupiedStatus" class="occupied-indicator occupied-available">
+                🔄 Loading Status...
+                <div id="occupancyMessage" class="occupancy-message" style="display: none;"></div>
+            </div>
+            
+            <div class="status-grid">
+                <div id="paperCard" class="status-card card-good">
+                    <h3><span class="card-icon">🧻</span> Toilet Paper</h3>
+                    <p id="paperStatus" class="loading">Loading...</p>
+                </div>
+                
+                <div id="trashCard" class="status-card card-good">
+                    <h3><span class="card-icon">🗑️</span> Waste Bin</h3>
+                    <p id="trashStatus" class="loading">Loading...</p>
+                </div>
+                
+                <div id="peopleCard" class="status-card card-info">
+                    <h3><span class="card-icon">👥</span> People Count</h3>
+                    <p id="peopleCount" class="loading">Loading...</p>
+                </div>
+                
+                <div id="doorCard" class="status-card card-good">
+                    <h3><span class="card-icon">🚪</span> Toilet compartment</h3>
+                    <p id="doorStatus" class="loading">Loading...</p>
+                </div>
+                
+                <div id="airCard" class="status-card card-good">
+                    <h3><span class="card-icon">🌬️</span> Air Quality</h3>
+                    <p id="airStatus" class="loading">Loading...</p>
+                    <div class="status-value" id="airDetails"></div>
+                </div>
+                
+                <div id="weightCard" class="status-card card-good">
+                    <h3><span class="card-icon">⚖️</span> Weight Sensor</h3>
+                    <p id="weightStatus" class="loading">Loading...</p>
                 </div>
             </div>
-            <div class="status-badge status-online" id="connectionStatus">
-                <span>🌐</span>
-                <span>实时连接中</span>
+            
+            <div class="last-update">
+                <strong>⏰ Last Update:</strong> <span id="lastUpdate">Never</span>
+                <br>
+                <strong>🔗 Connection:</strong> <span id="connectionStatus">Connecting...</span>
             </div>
         </div>
     </div>
 
-    <div class="container">
-        <div id="devicesContainer">
-            <div class="loading">
-                正在加载设备数据...
-            </div>
-        </div>
-    </div>
-
-    <div class="connection-indicator connected" id="wsStatus">
-        🟢 已连接
+    <!-- 连接状态指示器 -->
+    <div id="connectionIndicator" class="connection-status status-loading">
+        🔄 Connecting...
     </div>
 
     <script>
-        class ToiletMonitoringSystem {
-            constructor() {
-                this.devices = {};
-                this.wsConnection = null;
-                this.reconnectAttempts = 0;
-                this.maxReconnectAttempts = 5;
-                
-                this.init();
-            }
+        // 全局变量
+        let autoRefreshEnabled = true;
+        let autoRefreshInterval;
+        let connectionCheckInterval;
+        
+        // API基础URL - 根据当前域名自动判断
+        const API_BASE = window.location.origin;
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚽 Smart Toilet Cloud Interface Loading...');
+            initializeApp();
+        });
+        
+        function initializeApp() {
+            updateStatus();
+            startAutoRefresh();
+            startConnectionCheck();
             
-            init() {
-                this.loadInitialData();
-                this.connectWebSocket();
-                this.startPeriodicUpdate();
-            }
-            
-            async loadInitialData() {
-                try {
-                    const response = await fetch('/api/devices');
-                    const devices = await response.json();
-                    
-                    this.devices = devices;
-                    this.renderDevices();
-                } catch (error) {
-                    console.error('Failed to load initial data:', error);
-                    this.showNoDevices();
+            // 页面可见性检测
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden && autoRefreshEnabled) {
+                    updateStatus();
                 }
+            });
+        }
+        
+        function startAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
             }
             
-            connectWebSocket() {
-                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const wsUrl = `${protocol}//${window.location.hostname}:8080`;
-                
-                try {
-                    this.wsConnection = new WebSocket(wsUrl);
-                    
-                    this.wsConnection.onopen = () => {
-                        console.log('WebSocket connected');
-                        this.updateConnectionStatus('connected');
-                        this.reconnectAttempts = 0;
-                    };
-                    
-                    this.wsConnection.onmessage = (event) => {
-                        const message = JSON.parse(event.data);
-                        if (message.type === 'sensor-update') {
-                            this.updateDeviceData(message.deviceId, message.data);
-                        }
-                    };
-                    
-                    this.wsConnection.onclose = () => {
-                        console.log('WebSocket disconnected');
-                        this.updateConnectionStatus('disconnected');
-                        this.attemptReconnect();
-                    };
-                    
-                    this.wsConnection.onerror = (error) => {
-                        console.error('WebSocket error:', error);
-                        this.updateConnectionStatus('disconnected');
-                    };
-                } catch (error) {
-                    console.error('Failed to connect WebSocket:', error);
-                    this.updateConnectionStatus('disconnected');
-                }
-            }
-            
-            attemptReconnect() {
-                if (this.reconnectAttempts < this.maxReconnectAttempts) {
-                    this.reconnectAttempts++;
-                    this.updateConnectionStatus('connecting');
-                    
-                    setTimeout(() => {
-                        console.log(`Reconnection attempt ${this.reconnectAttempts}`);
-                        this.connectWebSocket();
-                    }, 3000 * this.reconnectAttempts);
-                }
-            }
-            
-            updateConnectionStatus(status) {
-                const statusElement = document.getElementById('connectionStatus');
-                const wsStatusElement = document.getElementById('wsStatus');
-                
-                statusElement.className = `status-badge status-${status === 'connected' ? 'online' : 'offline'}`;
-                
-                switch (status) {
-                    case 'connected':
-                        statusElement.innerHTML = '<span>🌐</span><span>实时连接中</span>';
-                        wsStatusElement.textContent = '🟢 已连接';
-                        wsStatusElement.className = 'connection-indicator connected';
-                        break;
-                    case 'connecting':
-                        statusElement.innerHTML = '<span>🔄</span><span>连接中...</span>';
-                        wsStatusElement.textContent = '🟡 连接中';
-                        wsStatusElement.className = 'connection-indicator connecting';
-                        break;
-                    case 'disconnected':
-                        statusElement.innerHTML = '<span>❌</span><span>连接断开</span>';
-                        wsStatusElement.textContent = '🔴 已断开';
-                        wsStatusElement.className = 'connection-indicator disconnected';
-                        break;
-                }
-            }
-            
-            updateDeviceData(deviceId, data) {
-                this.devices[deviceId] = data;
-                this.renderDevice(deviceId, data);
-            }
-            
-            renderDevices() {
-                const container = document.getElementById('devicesContainer');
-                
-                if (Object.keys(this.devices).length === 0) {
-                    this.showNoDevices();
-                    return;
-                }
-                
-                const devicesHTML = Object.entries(this.devices)
-                    .map(([deviceId, data]) => this.generateDeviceHTML(deviceId, data))
-                    .join('');
-                
-                container.innerHTML = `<div class="devices-grid">${devicesHTML}</div>`;
-            }
-            
-            renderDevice(deviceId, data) {
-                const deviceElement = document.getElementById(`device-${deviceId}`);
-                if (deviceElement) {
-                    deviceElement.outerHTML = this.generateDeviceHTML(deviceId, data);
-                }
-            }
-            
-            generateDeviceHTML(deviceId, data) {
-                const isOccupied = data.occupied;
-                const hasTimeout = data.occupancyTimeout;
-                
-                let occupancyClass = 'occupancy-available';
-                let occupancyText = '🟢 可用状态';
-                
-                if (hasTimeout) {
-                    occupancyClass = 'occupancy-timeout';
-                    occupancyText = '⚠️ 使用超时！';
-                } else if (isOccupied) {
-                    occupancyClass = 'occupancy-occupied';
-                    occupancyText = '🔴 使用中';
-                }
-                
-                return `
-                    <div class="device-card" id="device-${deviceId}">
-                        <div class="device-header">
-                            <div class="device-title">智能厕所 #${deviceId.split('_')[1] || '001'}</div>
-                            <div class="device-id">${deviceId}</div>
-                        </div>
-                        
-                        <div class="occupancy-status ${occupancyClass}">
-                            ${occupancyText}
-                            ${data.occupancyMessage ? `<div style="margin-top: 8px; font-size: 0.9em;">${data.occupancyMessage}</div>` : ''}
-                        </div>
-                        
-                        <div class="sensors-grid">
-                            ${this.generateSensorCard('🧻', '纸巾', data.paperLow ? '⚠️ 不足' : '✅ 充足', data.paperLow ? 'sensor-danger' : 'sensor-good')}
-                            ${this.generateSensorCard('🗑️', '垃圾桶', data.trashFull ? '⚠️ 已满' : '✅ 正常', data.trashFull ? 'sensor-danger' : 'sensor-good')}
-                            ${this.generateSensorCard('⚖️', '重量', data.weightAlert ? '⚠️ 异常' : '✅ 正常', data.weightAlert ? 'sensor-warning' : 'sensor-good')}
-                            ${this.generateSensorCard('🚪', '门状态', data.doorOpen ? '🔓 开启' : '🔒 关闭', data.doorOpen ? 'sensor-good' : 'sensor-danger')}
-                            ${this.generateSensorCard('👥', '人数', `${data.peopleCount} 人`, 'sensor-info')}
-                            ${this.generateSensorCard('🌬️', '空气质量', this.getAirQualityText(data.co2Level, data.tvocLevel), this.getAirQualityClass(data.co2Level, data.tvocLevel))}
-                        </div>
-                        
-                        <div class="device-footer">
-                            <div class="last-update">
-                                最后更新: ${this.formatTime(data.lastUpdate)}
-                            </div>
-                            <div class="device-actions">
-                                <button class="btn btn-primary" onclick="app.refreshDevice('${deviceId}')">
-                                    🔄 刷新
-                                </button>
-                                <button class="btn btn-secondary" onclick="app.showDeviceDetails('${deviceId}')">
-                                    📊 详情
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            generateSensorCard(icon, label, value, className) {
-                return `
-                    <div class="sensor-card ${className}">
-                        <span class="sensor-icon">${icon}</span>
-                        <div class="sensor-label">${label}</div>
-                        <div class="sensor-value">${value}</div>
-                    </div>
-                `;
-            }
-            
-            getAirQualityText(co2, tvoc) {
-                if (co2 > 2000 || tvoc > 5000) return '⚠️ 差';
-                if (co2 > 1000 || tvoc > 2000) return '⚡ 一般';
-                return '✅ 良好';
-            }
-            
-            getAirQualityClass(co2, tvoc) {
-                if (co2 > 2000 || tvoc > 5000) return 'sensor-danger';
-                if (co2 > 1000 || tvoc > 2000) return 'sensor-warning';
-                return 'sensor-good';
-            }
-            
-            formatTime(timestamp) {
-                if (!timestamp) return '从未';
-                return new Date(timestamp).toLocaleString('zh-CN');
-            }
-            
-            showNoDevices() {
-                const container = document.getElementById('devicesContainer');
-                container.innerHTML = `
-                    <div class="no-devices">
-                        <h2>🏢 暂无设备数据</h2>
-                        <p>请确保您的ESP32设备已连接并正在发送数据到云端服务器。<br>
-                        设备会每30秒自动发送一次状态更新。</p>
-                    </div>
-                `;
-            }
-            
-            async refreshDevice(deviceId) {
-                try {
-                    const response = await fetch(`/api/device/${deviceId}`);
-                    const data = await response.json();
-                    this.updateDeviceData(deviceId, data);
-                } catch (error) {
-                    console.error('Failed to refresh device:', error);
-                }
-            }
-            
-            showDeviceDetails(deviceId) {
-                const data = this.devices[deviceId];
-                if (!data) return;
-                
-                alert(`设备详情 - ${deviceId}\n\n` +
-                      `CO2浓度: ${data.co2Level} ppm\n` +
-                      `TVOC浓度: ${data.tvocLevel} ppb\n` +
-                      `使用时长: ${Math.floor(data.occupiedDuration / 1000)} 秒\n` +
-                      `最后更新: ${this.formatTime(data.lastUpdate)}`);
-            }
-            
-            startPeriodicUpdate() {
-                setInterval(() => {
-                    this.loadInitialData();
-                }, 60000); // 每分钟刷新一次
+            if (autoRefreshEnabled) {
+                autoRefreshInterval = setInterval(updateStatus, 3000); // 每3秒更新
+                console.log('✅ Auto refresh started (3s interval)');
             }
         }
         
-        // 初始化应用
-        const app = new ToiletMonitoringSystem();
+        function startConnectionCheck() {
+            connectionCheckInterval = setInterval(checkConnection, 10000); // 每10秒检查连接
+        }
         
-        // 页面可见性检测，当用户切换回标签页时刷新数据
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) {
-                app.loadInitialData();
+        async function checkConnection() {
+            try {
+                const response = await fetch(`${API_BASE}/api/devices`, {
+                    method: 'GET',
+                    timeout: 5000
+                });
+                
+                if (response.ok) {
+                    updateConnectionStatus('connected');
+                } else {
+                    updateConnectionStatus('disconnected');
+                }
+            } catch (error) {
+                console.error('Connection check failed:', error);
+                updateConnectionStatus('disconnected');
+            }
+        }
+        
+        function updateConnectionStatus(status) {
+            const indicator = document.getElementById('connectionIndicator');
+            const statusSpan = document.getElementById('connectionStatus');
+            
+            switch (status) {
+                case 'connected':
+                    indicator.textContent = '🟢 Connected';
+                    indicator.className = 'connection-status status-connected';
+                    statusSpan.textContent = 'Connected to Cloud';
+                    break;
+                case 'disconnected':
+                    indicator.textContent = '🔴 Disconnected';
+                    indicator.className = 'connection-status status-disconnected';
+                    statusSpan.textContent = 'Connection Lost';
+                    break;
+                case 'loading':
+                    indicator.textContent = '🔄 Loading...';
+                    indicator.className = 'connection-status status-loading';
+                    statusSpan.textContent = 'Connecting...';
+                    break;
+            }
+        }
+        
+        async function updateStatus() {
+            try {
+                updateConnectionStatus('loading');
+                
+                const response = await fetch(`${API_BASE}/api/devices`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const devices = await response.json();
+                console.log('📡 Received device data:', devices);
+                
+                // 获取第一个设备的数据（toilet_001）
+                const deviceData = devices['toilet_001'] || Object.values(devices)[0];
+                
+                if (deviceData) {
+                    updateDeviceDisplay(deviceData);
+                    updateConnectionStatus('connected');
+                } else {
+                    showNoDeviceData();
+                    updateConnectionStatus('connected');
+                }
+                
+            } catch (error) {
+                console.error('Status update failed:', error);
+                showConnectionError(error.message);
+                updateConnectionStatus('disconnected');
+            }
+        }
+        
+        function updateDeviceDisplay(data) {
+            // 更新占用状态
+            const occupiedDiv = document.getElementById('occupiedStatus');
+            
+            if (data.occupancyTimeout) {
+                occupiedDiv.innerHTML = '⚠️ OCCUPANCY TIMEOUT!<div class="occupancy-message">' + (data.occupancyMessage || '') + '</div>';
+                occupiedDiv.className = 'occupied-indicator occupied-timeout';
+            } else if (data.occupied) {
+                let message = '🔴 OCCUPIED - In Use';
+                if (data.occupancyMessage) {
+                    message += '<div class="occupancy-message">' + data.occupancyMessage + '</div>';
+                }
+                occupiedDiv.innerHTML = message;
+                occupiedDiv.className = 'occupied-indicator occupied-busy';
+            } else {
+                occupiedDiv.innerHTML = '🟢 AVAILABLE - Ready';
+                occupiedDiv.className = 'occupied-indicator occupied-available';
+            }
+            
+            // 更新各个传感器状态
+            updateCard('paperCard', 'paperStatus', data.paperLow, '⚠️ Paper Low!', '✅ Normal');
+            updateCard('trashCard', 'trashStatus', data.trashFull, '⚠️ Bin Full!', '✅ Normal');
+            updateCard('weightCard', 'weightStatus', data.weightAlert, '⚠️ Alert!', '✅ Normal');
+            
+            // 人数统计
+            const peopleCard = document.getElementById('peopleCard');
+            peopleCard.className = 'status-card card-info';
+            document.getElementById('peopleCount').textContent = (data.peopleCount || 0) + ' Person(s)';
+            
+            // 门状态
+            const doorCard = document.getElementById('doorCard');
+            const doorStatus = document.getElementById('doorStatus');
+            if (data.doorOpen) {
+                doorCard.className = 'status-card card-good';
+                doorStatus.textContent = '🔓 Open';
+            } else {
+                doorCard.className = 'status-card card-danger';
+                doorStatus.textContent = '🔒 Closed';
+            }
+            
+            // 空气质量
+            const airCard = document.getElementById('airCard');
+            const airStatus = document.getElementById('airStatus');
+            const airDetails = document.getElementById('airDetails');
+            
+            const co2Level = data.co2Level || 0;
+            const tvocLevel = data.tvocLevel || 0;
+            
+            if (co2Level > 2000 || tvocLevel > 5000) {
+                airCard.className = 'status-card card-danger';
+                airStatus.textContent = '⚠️ Poor';
+            } else if (co2Level > 1000 || tvocLevel > 2000) {
+                airCard.className = 'status-card card-warning';
+                airStatus.textContent = '⚡ Fair';
+            } else {
+                airCard.className = 'status-card card-good';
+                airStatus.textContent = '✅ Good';
+            }
+            
+            airDetails.textContent = `CO₂: ${co2Level}ppm | TVOC: ${tvocLevel}ppb`;
+            
+            // 更新时间戳
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
+            document.getElementById('deviceInfo').textContent = `Device: ${data.deviceId || 'toilet_001'}`;
+        }
+        
+        function updateCard(cardId, statusId, isAlert, alertText, normalText) {
+            const card = document.getElementById(cardId);
+            const status = document.getElementById(statusId);
+            if (isAlert) {
+                card.className = 'status-card card-danger';
+                status.textContent = alertText;
+            } else {
+                card.className = 'status-card card-good';
+                status.textContent = normalText;
+            }
+        }
+        
+        function showNoDeviceData() {
+            document.getElementById('occupiedStatus').innerHTML = '📊 No Device Data<div class="occupancy-message">Waiting for ESP32 connection...</div>';
+            document.getElementById('occupiedStatus').className = 'occupied-indicator occupied-available';
+            
+            // 重置所有状态卡片
+            const cards = ['paperStatus', 'trashStatus', 'weightStatus', 'doorStatus', 'airStatus', 'peopleCount'];
+            cards.forEach(cardId => {
+                const element = document.getElementById(cardId);
+                if (element) {
+                    element.textContent = 'No Data';
+                    element.parentElement.parentElement.className = 'status-card card-good';
+                }
+            });
+            
+            document.getElementById('airDetails').textContent = 'CO₂: 0ppm | TVOC: 0ppb';
+        }
+        
+        function showConnectionError(errorMessage) {
+            document.getElementById('occupiedStatus').innerHTML = '❌ Connection Error<div class="occupancy-message">' + errorMessage + '</div>';
+            document.getElementById('occupiedStatus').className = 'occupied-indicator occupied-timeout';
+        }
+        
+        async function resetAlerts() {
+            try {
+                const response = await fetch(`${API_BASE}/api/reset`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    showNotification('✅ Alerts Reset!', 'success');
+                    setTimeout(updateStatus, 1000);
+                } else {
+                    showNotification('❌ Reset Failed!', 'error');
+                }
+            } catch (error) {
+                console.error('Reset failed:', error);
+                showNotification('❌ Reset Failed: ' + error.message, 'error');
+            }
+        }
+        
+        async function generateTest() {
+            try {
+                const response = await fetch(`${API_BASE}/api/test`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    showNotification('🧪 Test Data Generated!', 'success');
+                    setTimeout(updateStatus, 1000);
+                } else {
+                    showNotification('❌ Test Generation Failed!', 'error');
+                }
+            } catch (error) {
+                console.error('Test generation failed:', error);
+                showNotification('❌ Test Failed: ' + error.message, 'error');
+            }
+        }
+        
+        function toggleAutoRefresh() {
+            autoRefreshEnabled = !autoRefreshEnabled;
+            
+            const icon = document.getElementById('autoRefreshIcon');
+            const text = document.getElementById('autoRefreshText');
+            
+            if (autoRefreshEnabled) {
+                icon.textContent = '⏸️';
+                text.textContent = 'Pause Auto';
+                startAutoRefresh();
+                showNotification('✅ Auto Refresh Enabled', 'success');
+            } else {
+                icon.textContent = '▶️';
+                text.textContent = 'Start Auto';
+                clearInterval(autoRefreshInterval);
+                showNotification('⏸️ Auto Refresh Paused', 'success');
+            }
+        }
+        
+        function showNotification(message, type) {
+            // 移除已存在的通知
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 70px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: bold;
+                z-index: 1001;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                max-width: 300px;
+                ${type === 'success' ? 'background: #4CAF50;' : 'background: #f44336;'}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.style.opacity = '1', 100);
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.parentElement.removeChild(notification);
+                    }
+                }, 300);
+            }, 4000);
+        }
+        
+        // 页面卸载时清理定时器
+        window.addEventListener('beforeunload', function() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            if (connectionCheckInterval) {
+                clearInterval(connectionCheckInterval);
             }
         });
     </script>
